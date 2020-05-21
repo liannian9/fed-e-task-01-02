@@ -53,9 +53,10 @@ makeFn()() // hello function
 //once 一个函数只执行一次
 function once (fn:any) {
   let done = false;
-  return function (...arg:number[]) {
+  return function (this:void, ...arg:number[]) {
     if (!done) {
       done = true;
+      console.log(this)
       return fn.apply(this, arg)
     }
   }
@@ -81,7 +82,7 @@ interface mapType{
 function map (array:Array<number>, fn:mapType) {
   let results = [];
   for(let value of array) {
-    results.push(fn(value))
+    results.push(fn.apply(fn, [value]))
   }
   return results;
 }
@@ -129,3 +130,22 @@ let someRes = some(arr, function (item:any):boolean {
     return item > 6; //false
 })
 console.log(someRes) //true
+
+function getLength(something: string | number): number {
+  if ((<string>something).length) {
+      return (<string>something).length;
+  } else {
+      return something.toString().length;
+  }
+}
+
+let obj = {
+  a:1,
+  b:1
+}
+console.log(Object.keys(obj), Object.values(obj), Object.entries(obj));
+
+
+
+
+
