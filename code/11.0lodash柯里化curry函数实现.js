@@ -35,3 +35,5 @@ console.log(selfKLH(1,2,3))
 console.log(selfKLH(1)(2,3))
 console.log(selfKLH(1))
 console.log(selfKLH(1)(2))
+
+
