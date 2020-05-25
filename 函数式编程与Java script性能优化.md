@@ -140,7 +140,7 @@
    - 我们很难凭空地比较这两种不同编程范式地好坏，它们都是解决问题不同的正确的方式。就具体问题来说：如果我们有很多数据变种，少量的操作，函数式编程可能比较好些；反之则面相对象编程比较好些。
 
 -----------------------------------------------------------------------------------
-# 函数式编程相关
+## 函数式编程相关
  - 函数是一等公民
     + 函数是一个对象
     + 函数可以存储在变量中（函数表达式）
@@ -153,14 +153,266 @@
  - 函数在正常工作任务之外对外部环境所施加的影响。具体地说，函数副作用是指函数被调用，完成了函数既定的计算任务，但同时因为访问了外部数据，尤其是因为对外部数据进行了写操作，从而一定程度地改变了系统环境。
 ### 硬编码：数据直接嵌入到程序或其他可执行对象的源代码中的软件开发实践，与从外部获取数据或在运行时生成数据不同
 
+-----------------------------------------------------------------------------------
+## 函数式编程基础
+ - 柯里化：
+   + 将多元函数转化为一元函数 将fn（a, b, c） 转化为fn (a)(b)(c) 或者fn(a,b)(c)等，此三者的值等价
+   + 柯里化可以让我们给一个函数传递较少的参数得到一个已经记住了某些固定参数的新函数；
+   + 这是对函数参数的缓存
+   + 让函数变得更灵活，颗粒更小
+   + 可以把多元函数转换成一元函数，可以组合使用函数产生强大的功能
+   ``` 
+   示例：
+   function curry (fn) {
+       return function curryFn(...arg) {
+           if (arg.length < fn.length) {
+               return function () {
+                   return curryFn(...arg.concat([...arguments]))
+               }
+           }
+           retrun fn(...arg);
+       }
+
+   }
+   ```
+ - 纯函数：
+   + 固定的输入一定有固定的输出
+   + 不依赖外部数据
+ - 组合函数/管道（组合函数与管道的区别在于管道从左往右，组合函数从右往左）
+   + 如果一个函数需要经过多个函数处理才能得到最终值，这个时候可以把中间过程的函数合并成一个函数
+```
+示例：
+    function compose(...arg) {
+        return function (value) {
+            arg.reduceRight((prev,curr) => {
+                return curr(prev)
+            }, value)
+        }
+    }
+```
+-----------------------------------------------------------------------------------
+## PointFree
+- Point Free：组合函数就是一种Point Free模式
+- 我们可以把数据处理的过程定义成与数据无关的合成运算，不需要用到代表数据的那个参数，
+- 只要把见到那的运算步骤合成到一起，在使用这种模式之前我们需要定义一些辅助的基本运算函数
+
+- 不需要指明处理的数据
+- 只需要合成运算过程
+- 需要定义一些辅助的基本运算函数
+## 函子（Functor）：一个特殊的容器，通过一个普通的对象来实现，该对象具有map方法，map方法可以运行一个函数对值进行处理（变形关系）
+ - MayBe， Either， IO， Task， Monad， Pointed
+ - 为什么要学：可以帮助我们在函数时编程中将副作用控制在可控范围内
+ - 总计：
+ - 函数式编程的运算不直接操作值，而是由函子完成
+ - 函子就是一个实现了map契约的对象
+ - 我们可以把函子想象成一个盒子，盒子内封装了一个值
+ - 想要处理盒子中的值，我们需要给盒子的map方法传递一个处理值的函数（纯函数），由这个函数来处理值
+ - 最终map返回一个包含新值的盒子（函子）
+
+### Functor 函子
+```
+    class Container {
+        constructor(value) {
+            this._value = value
+        }
+        map(fn) {
+            return new Container(fn(value))
+        }
+    }
+```
+### MayBe 函子 兼容空值
+```
+    class Maybe {
+        constructor(value) {
+            this._value = value
+        }
+        map(fn) {
+            return this.isNothing ? new Container(null) : new Container(fn(value))
+        }
+        isNothing() {
+            return this._value === null || this._value === undefined
+        }
+    }
+```
+
+### Either 函子（类似于if...else...） 异常处理
+```
+    class Left {
+        constructor(value) {
+            this._value = value
+        }
+        map(fn) {
+            return this
+        }
+    }
+    class Right {
+        constructor(value) {
+            this._value = value
+        }
+        map(fn) {
+            return this.isNothing ? new Right(null) : new Right(fn(value))
+        }
+        isNothing() {
+            return this._value === null || this._value === undefined
+        }
+    }
+    function ParseJson (str) {
+        try {
+            return new Right(JSON.parse(str))
+        } catch (err){
+            return new Left({err:err.message})
+        }
+    }
+
+```
+## IO函子 
+ - IO函子中的_value是一个函数，这里把函数作为值来处理
+ - IO函子可以把不纯的动作存储到_value中，延迟执行这个不纯的操作（惰性执行），包装当前的操作
+ - 把不纯的操作交给调用者处理
+```
+
+const fp = require('lodash/fp')
+const fs = require('fs')
+class IO {
+    static of(value) {
+        return new IO(function () {
+            return value
+        })
+    }
+    constructor(fn) {
+        this._value = fn;
+    }
+    map (fn) {
+        return new IO(fp.flowRight(fn, this._value));
+    }
+}
+
+let io = IO.of(process).map(p => p.execPath)
+
+console.log(io._value())
+
+
+//IO函子的问题 IO函子嵌套
+
+let readFile = function (filename) {
+    return new IO(function () {
+        return fs.readFileSync(filename, 'utf-8')
+    })
+}
+
+let print = function (x) {
+    return new IO(function () {
+        console.log(x);
+        return x;
+    })
+}
+
+let cat = fp.flowRight(print, readFile)
+//IO { _value: [Function] }
+let r = cat('./package.json')._value()._value()
+// r : Io{
+//    _value:function () {
+//        return IO {
+//            _value:function () {
+//                return fs.readFileSync(filename, 'utf-8')
+//            }
+//        }
+//    }
+//}
+console.log(r)
+```
+## POinted 函子 带有of静态方法的函子，of方法主要帮我们将一个值放入到一个容器中并且返回
+```
+    class Pointed {
+        static of (value) {
+            return new Pointed(value)
+        }
+        constructor(value) {
+            this._value = value
+        }
+        map(fn) {
+            return Pointed.of(fn(value))
+        }
+    }
+```
+## Monad 函子 （解决函子嵌套）
+ - 可以变扁的Pointed函子
+ - 一个函子如果具有join与of两个方法并且遵守一些定律就是一个Monad函子
+```
+class Monad {
+    static of(value) {
+        return new Monad(function () {
+            return value
+        })
+    }
+    constructor (fn) {
+        this_value = fn
+    }
+    map(fn) {
+        return new Monad(compose(fn, this._value))
+    }
+    join() {
+        return this._value
+    }
+    flatMap (fn) {
+        return this.map(fn).join()
+    }
+}
+
+let readFile = function (filename) {
+    return new Monad(function () {
+        return fs.readFileSync(filename, 'utf-8')
+    })
+}
+
+let print = function (x) {
+    return new Monad(function () {
+        console.log(x);
+        return x;
+    })
+}
+
+)
+
+readFile(pathname).flatMap(print).join()
+
+```
+## Task 函子 处理异步任务 - Folktale第三方库
+```
+  const fs = require('fs')
+const {task} = require('folktale/concurrency/task')
+const {split, find} = require('lodash/fp')
+function readFile(filename) {
+    return task(resolver => {
+        fs.readFile(filename, 'utf-8', (err, data) => {
+            if (err) return resolver.reject(err)
+            resolver.resolve(data)
+        })
+    })
+}
+
+readFile('./package.json')
+    .map(split('\n'))
+    .map(find(x => x.includes('version')))
+    .run()
+    .listen({
+        onRejected:err => {
+            console.log(err)
+        },
+        onResolved:value => {
+            console.log(value)
+        }
+    })  
+```
 
 # javscript的性能优化
 ## 垃圾回收/GC算法（垃圾收集器会按照固定的时间间隔（或代码执行中预定的收集时间）， 周期性地执行这一操作：找出那些不再继续使用的变量，然后释放其占用的内存。）
 ### 引用计数（V8不采用）
- - 核心思想：设置引用数，判断当前引用数是否为0，为0则回收
+ - 核心思想：设置引用数，判断当前引用数是否为0，为0则回收，跟踪记录每个值被引用的次数
  - 优点：发现垃圾立即回收，最大程度减少程序暂停（时刻监控内存即将爆满，立即检查）
  - 缺点：无法回收循环引用的对象，资源开销大（引用计数器的操作）
-
+ - 引用计数法每个对象都有一个引用计数器，当对象被引用一次，次数+1，引用失效次数-1，计数器数量为0意味着是垃圾对象，可以回收
+ - 当垃圾回收器下一次运行时，就会释放那些引用次数为0的值所占用的内存。
 ### 标记清除
  - 实现原理：
     + 分标记与清除两个阶段
@@ -177,5 +429,15 @@
  - 优点：减少碎片化空间
  - 缺点：不能立即回收垃圾对象
 ### 分代回收
- - 新生代对象
- - 老生代对象
+ - 采用分代回收的思想
+ - 内存分为新生代老生代
+ - 针对不同对象采用不同算法
+
+ ![v8存储空间](https://raw.githubusercontent.com/liannian9/Img/master/img/20200525221335.png)
+
+ #### 新生代对象存储区（64为32M, 32为16M）（空间换取时间）
+ - 存活时间较短的对象（如局部作用域的对象）
+ - 存储空间一分为二（from,to）== 等分
+ - 回收过程采用复制算法 + 标记整理
+ - 使用空间为from 空闲空间为to
+ 
