@@ -436,8 +436,12 @@ readFile('./package.json')
  ![v8存储空间](https://raw.githubusercontent.com/liannian9/Img/master/img/20200525221335.png)
 
  #### 新生代对象存储区（64为32M, 32为16M）（空间换取时间）
+ - 为什么采用这种算法：对于老生代内存来说，可能会存储大量对象，如果在老生代中使用这种算法，势必会造成内存资源的浪费，但是在新生代内存中，大部分对象的生命周期较短，在时间效率上表现可观，所以还是比较适合这种算法
  - 存活时间较短的对象（如局部作用域的对象）
  - 存储空间一分为二（from,to）== 等分
  - 回收过程采用复制算法 + 标记整理
  - 使用空间为from 空闲空间为to
- 
+ - 具体流程：在Scavenge算法的具体实现中，主要采用了Cheney算法，它将新生代内存一分为二，每一个部分的空间称为semispace，也就是我们在上图中看见的new_space中划分的两个区域，其中处于激活状态的区域我们称为From空间，未激活(inactive new space)的区域我们称为To空间。这两个空间中，始终只有一个处于使用状态，另一个处于闲置状态。我们的程序中声明的对象首先会被分配到From空间，当进行垃圾回收时，如果From空间中尚有存活对象，则会被复制到To空间进行保存，非存活的对象会被自动回收。当复制完成后，From空间和To空间完成一次角色互换，To空间会变为新的From空间，原来的From空间则变为To空间。
+ - 示意图：
+ ![新生代垃圾回收1](https://raw.githubusercontent.com/liannian9/Img/master/img/20200525222206.png)
+ ![新生代垃圾回收2](https://raw.githubusercontent.com/liannian9/Img/master/img/20200525222311.png)
