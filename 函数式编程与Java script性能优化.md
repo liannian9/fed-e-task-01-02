@@ -467,3 +467,97 @@ readFile('./package.json')
  - shift + esc 浏览器任务管理器 监控 内存是否频繁变化 
  - 控制台performance memory监控内存变化，根据timeLine查看是什么操作引起的
  - 控制台memory 堆快照（heap snapshot）查找分离DOM（搜索detached）
+
+## 代码优化
+ - 测试js性能 https://jsperf.com/ （在线测试）
+ ![测试js性能](https://raw.githubusercontent.com/liannian9/Img/master/img/20200526220938.png)
+
+ - 慎用全局变量：
+   + 全局变量定义于全局执行上下文，是所有作用域的顶端，与局部变量相比查找时间消耗大
+   + 全局变量定义于全局执行上下文，一直存在于上下文执行栈，直到程序退出，对于GC操作非常不利，因为一直存在
+   + 某个局部作用域出现同名变量，会遮蔽或者污染全局
+   ```
+   //第二个性能更优
+   var i, str = "";
+    for (var i = 0; i< 1000; i++) {
+        str+=i
+        console.log(str)
+        
+    }
+    for (let i = 0; i< 1000; i++) {
+        let str = ''
+        str+=i
+        console.log(str)
+    }
+   ```
+ - 缓存全局变量
+   + 将使用中无法避免的全局变量缓存到局部
+    ![缓存全局变量](./static/缓存全局变量.jpg)
+ - 通过原型新增方法
+   + 在原型对象上新增实例对象需要的方法
+  ```
+    var fn1 = function () {
+        this.foo = function () {
+            console.log(1111)
+        }
+    }
+    let f1 = new fn1()
+    var fn2 = function () {
+    }
+    fn2.prototype.foo = function () {//性能更优
+        console.log(1111)
+    }
+    let f21 = new fn2()
+  ```
+ - 避开闭包陷阱
+   + 闭包很容易出现内存泄漏
+   + 不要为了闭包而闭包
+    
+    ```
+    function test (fun) {
+        console.log(fun())
+    }
+    function test2 () {
+        let name = 'lg'
+        return name;
+    }
+    test(function () {//性能稍差
+        let name = 'lg'
+        return name;
+    })
+    test(test2) //性能更优
+    ```
+ - 避免属性访问方法使用
+   + js中的面向对象不需要属性的访问方法，所有属性都是外部可见的
+   + 使用属性访问方法只会增加一层重定义，没有访问的控制力
+   ```
+   function Person () {// 性能更低
+       this.name = "lg";
+       this.getName = function () {
+           return this.name
+       }
+   }
+   const pAge = new Person().getName()
+   function Person1 () { //性能更高
+       this.name = "lg";
+   }
+    const p2Age = new Person2().name;
+   ```
+- for循环的优化
+    ```
+    const arr=[]
+    arr[10000] = "lh"
+    for (var i = 0; i< arr.length; i++) {//性能更优，每次循环都要获取arr.length的值
+        console.log(arr[i])
+    }
+    for (var i = arr.length; i; i--) { //性能更优
+        console.log(arr[i])
+    }
+
+    ```
+- 选择最优的循环方式
+- 节点的优化操作
+    + 文档碎片添加节点
+    + 克隆优化节点操作:当有一个节点已经包含有部分属性，而需要的新增的节点与当前节点基本一致，可以使用克隆优化操作
+![克隆优化节点操作](./static/克隆优化节点操作.jpg)
+- 直接量替换new Object
