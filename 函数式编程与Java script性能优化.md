@@ -14,26 +14,28 @@
 
 ### 函数式编程与面向对象编程的区别(计算机程序通常由两部分内容组成：数据和操作,在FP中，这两者通常由值和函数 来表示;在OOP中，我们把数据和操作定义在一个class中，通过类属性和类方法来表示)
    - 数据访问方式不一样
-    + OOP:访问数据（全局变量除外），需要先获取对象的引用，然后在进行操作,所谓的对象其实就是函数式中的作用域
+      + OOP:访问数据（全局变量除外），需要先获取对象的引用，然后在进行操作,所谓的对象其实就是函数式中的作用域
          所以也可以叫做作用域编程， 数据与操作逻辑合并到一起，形成一个封装
-    + FP：访问是直接访问（通过函数入参或者作用域链查找），面向功能编程，函数可以访问的变量范围远远大于
+      + FP：访问是直接访问（通过函数入参或者作用域链查找），面向功能编程，函数可以访问的变量范围远远大于
          OOP，灵活性更高，但是OOP的约束性更强，本质是将数据与操作逻辑分开，然后各种组合
-    ```
-        //OOP
-        class Foo {
-            constructor() {
-                this.bar = 0
-            }
+
+```
+    //OOP
+    class Foo {
+        constructor() {
+            this.bar = 0
         }
-        let foo = new Foo()
-        foo.bar++
-        //FP
-        let bar = 0;
-        function foo () {
-            bar++
-        }
-        foo()
-    ``` 
+    }
+    let foo = new Foo()
+    foo.bar++
+    //FP
+    let bar = 0;
+    function foo () {
+        bar++
+    }
+    foo()
+``` 
+
 ## 案例分析：
 
 |          | 方法fn1    |  方法fn2  |  方法fn3  |
@@ -250,7 +252,7 @@
             this._value = value
         }
         map(fn) {
-            return this.isNothing ? new Right(null) : new Right(fn(value))
+            return this.isNothing() ? new Right(null) : new Right(fn(value))
         }
         isNothing() {
             return this._value === null || this._value === undefined
@@ -352,7 +354,7 @@ class Monad {
         return new Monad(compose(fn, this._value))
     }
     join() {
-        return this._value
+        return this._value()
     }
     flatMap (fn) {
         return this.map(fn).join()
