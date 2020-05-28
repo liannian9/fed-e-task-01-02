@@ -56,8 +56,8 @@ console.log(composeFn2(cars), '=>>>>>>>>>>>>>>>>>3');
 let _underscore = fp.replace(/\W+/g, '_')
 
 let sanitizenames = fp.map(item => {
-  item.name = fp.flowRight(_underscore, fp.toLower)(item.name)
-  return item
+    item.name = fp.flowRight(_underscore, fp.toLower)(item.name)
+    return item
 })
 
 console.log(sanitizenames(cars) ,'==========>4')

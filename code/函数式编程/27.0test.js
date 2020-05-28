@@ -58,9 +58,10 @@ function curry (fn) {
 }
 let maybe = Maybe.of([5,6,1])
 
-function ex1(maybe) {
+function ex1(maybe, num) {
+  let add = fp.add(num);
   let fn = fp.map((item) => {
-      return fp.add(1, item)
+      return add(item)
     })
 
   return maybe.map(fn)._value
@@ -73,7 +74,11 @@ function ex1(maybe) {
 // }
 
 
-console.log(ex1(maybe), 'ex1')
+console.log(ex1(maybe, 0), 'ex1')
+
+console.log(fp.curry(ex1)(maybe)(1), '=======>1')
+console.log(fp.curry(ex1)(maybe)(2), "=============>2")
+
 
 let xs = Container.of(['do','ray','me','fa','so','la','ti', 'do']);
 
