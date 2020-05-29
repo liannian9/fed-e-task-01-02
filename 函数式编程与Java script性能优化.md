@@ -497,7 +497,7 @@ readFile('./package.json')
    ```
  - 缓存全局变量
    + 将使用中无法避免的全局变量缓存到局部
-   ![缓存全局变量](https://raw.githubusercontent.com/liannian9/Img/master/img/%E7%BC%93%E5%AD%98%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F.jpg)
+![缓存全局变量](https://raw.githubusercontent.com/liannian9/Img/master/img/%E7%BC%93%E5%AD%98%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F.jpg)
  - 通过原型新增方法
    + 在原型对象上新增实例对象需要的方法
   ```
