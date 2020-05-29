@@ -443,8 +443,7 @@ readFile('./package.json')
  - 内存分为新生代老生代
  - 针对不同对象采用不同算法
 
- ![v8存储空间](./static/v8存储空间.jpg)
-
+![v8存储空间](https://raw.githubusercontent.com/liannian9/Img/master/img/v8%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4.jpg)
  #### 新生代对象存储区（64为32M, 32为16M）（空间换取时间）
  - 为什么采用这种算法：对于老生代内存来说，可能会存储大量对象，如果在老生代中使用这种算法，势必会造成内存资源的浪费，但是在新生代内存中，大部分对象的生命周期较短，在时间效率上表现可观，所以还是比较适合这种算法
  - 存活时间较短的对象（如局部作用域的对象）
@@ -453,8 +452,8 @@ readFile('./package.json')
  - 使用空间为from 空闲空间为to
  - 具体流程：具体实现中，它将新生代内存一分为二，也就是我们在上图中看见左边划分的两个区域，其中处于激活状态的区域我们称为From空间，未激活(inactive new space)的区域我们称为To空间。这两个空间中，始终只有一个处于使用状态，另一个处于闲置状态。我们的程序中声明的对象首先会被分配到From空间，当进行垃圾回收时，如果From空间中尚有存活对象，则会被复制到To空间进行保存，非存活的对象会被自动回收。当复制完成后，From空间和To空间完成一次角色互换，To空间会变为新的From空间，原来的From空间则变为To空间。
  - 示意图：
- ![新生代垃圾回收1](./static/新生代垃圾回收1.jpg)
- ![新生代垃圾回收2](./static/新生代垃圾回收2.jpg)
+ ![新生代垃圾回收1](https://raw.githubusercontent.com/liannian9/Img/master/img/%E6%96%B0%E7%94%9F%E4%BB%A3%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B61.jpg)
+ ![新生代垃圾回收2](https://raw.githubusercontent.com/liannian9/Img/master/img/%E6%96%B0%E7%94%9F%E4%BB%A3%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B62.jpg)
  - 在对活动对象进行拷贝时可能出现对象晋升（晋升为老生代）
    + 一轮GC之后还存在的新生代对象需要晋升
    + TO空间的使用率超过25%（之所以有25%的内存限制是因为To空间在经历过一次GC算法后会和From空间完成角色互换，会变为From空间，后续的内存分配都是在From空间中进行的，如果内存使用过高甚至溢出，则会影响后续对象的分配，因此超过这个限制之后对象会被直接转移到老生代来进行管理）
@@ -498,7 +497,7 @@ readFile('./package.json')
    ```
  - 缓存全局变量
    + 将使用中无法避免的全局变量缓存到局部
-    ![缓存全局变量](./static/缓存全局变量.jpg)
+   ![缓存全局变量](https://raw.githubusercontent.com/liannian9/Img/master/img/%E7%BC%93%E5%AD%98%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F.jpg)
  - 通过原型新增方法
    + 在原型对象上新增实例对象需要的方法
   ```
@@ -565,5 +564,5 @@ readFile('./package.json')
 - 节点的优化操作
     + 文档碎片添加节点
     + 克隆优化节点操作:当有一个节点已经包含有部分属性，而需要的新增的节点与当前节点基本一致，可以使用克隆优化操作
-![克隆优化节点操作](./static/克隆优化节点操作.jpg)
+![克隆优化节点操作](https://raw.githubusercontent.com/liannian9/Img/master/img/%E5%85%8B%E9%9A%86%E4%BC%98%E5%8C%96%E8%8A%82%E7%82%B9%E6%93%8D%E4%BD%9C.jpg)
 - 直接量替换new Object
