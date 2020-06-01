@@ -553,7 +553,7 @@ readFile('./package.json')
     ```
     const arr=[]
     arr[10000] = "lh"
-    for (var i = 0; i< arr.length; i++) {//性能更优，每次循环都要获取arr.length的值
+    for (var i = 0; i< arr.length; i++) {//每次循环都要获取arr.length的值
         console.log(arr[i])
     }
     for (var i = arr.length; i; i--) { //性能更优
